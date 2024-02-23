@@ -1,0 +1,174 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <unordered_map>
+
+using namespace std;
+
+class AuctionItem {
+private:
+    int item_number;
+    string description;
+    double reserve_price;
+    int num_bids;
+    double highest_bid;
+
+public:
+    AuctionItem(int item_number, string description, double reserve_price)
+        : item_number(item_number), description(description), reserve_price(reserve_price), num_bids(0), highest_bid(0) {}
+
+    bool record_bid(double bid_amount) {
+        if (bid_amount > highest_bid) {
+            highest_bid = bid_amount;
+            num_bids++;
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    bool meets_reserve() {
+        return highest_bid >= reserve_price;
+    }
+
+    void display() {
+        cout << "Item Number: " << item_number << ", Description: " << description << ", Reserve Price: " << reserve_price
+             << ", Highest Bid: " << highest_bid << ", Number of Bids: " << num_bids << endl;
+    }
+
+    int getItemNumber() {
+        return item_number;
+    }
+
+    double getHighestBid() {
+        return highest_bid;
+    }
+
+    double getReservePrice() {
+        return reserve_price;
+    }
+
+    string getDescription() {
+        return description;
+    }
+};
+
+class Auction {
+private:
+    vector<AuctionItem> items;
+    unordered_map<int, double> bids;
+
+public:
+    void add_item(int item_number, string description, double reserve_price) {
+        AuctionItem item(item_number, description, reserve_price);
+        items.push_back(item);
+    }
+
+    void display_items() {
+        for (auto& item : items) {
+            item.display();
+        }
+    }
+
+    void record_bid(int buyer_number, int item_number, double bid_amount) {
+        if (bids.find(item_number) == bids.end() || bid_amount > bids[item_number]) {
+            bids[item_number] = bid_amount;
+            for (auto& item : items) {
+                if (item.getItemNumber() == item_number) {
+                    if (item.record_bid(bid_amount)) {
+                        cout << "Bid recorded successfully for item " << item_number << " by buyer " << buyer_number << "." << endl;
+                    } else {
+                        cout << "Bid must be higher than current highest bid for item " << item_number << "." << endl;
+                    }
+                    break;
+                }
+            }
+        } else {
+            cout << "Bid amount must be higher than previous bid for item " << item_number << "." << endl;
+        }
+    }
+
+    void end_auction() {
+        double total_fee = 0;
+        int items_sold = 0;
+        int items_not_meeting_reserve = 0;
+        int items_with_no_bids = 0;
+
+        cout << "Items Sold:" << endl;
+        for (auto& item : items) {
+            if (item.meets_reserve()) {
+                total_fee += item.getHighestBid() * 0.1;
+                items_sold++;
+                cout << "Item: " << item.getDescription() << endl
+                     << "Reserve Price: " << item.getReservePrice() << endl
+                     << "Sold for: " << item.getHighestBid() << endl
+                     << "Fee: " << item.getHighestBid() * 0.1 << endl << endl;
+            } else {
+                if (item.getHighestBid() == 0) {
+                    items_with_no_bids++;
+                    cout << "Item: " << item.getDescription() << endl
+                         << "Reserve Price: " << item.getReservePrice() << endl
+                         << "Received no bids." << endl << endl;
+                } else {
+                    items_not_meeting_reserve++;
+                    cout << "Item: " << item.getDescription() << endl
+                         << "Reserve Price: " << item.getReservePrice() << endl
+                         << "Did not meet reserve price. Final Bid: " << item.getHighestBid() << endl << endl;
+                }
+            }
+        }
+
+        cout << "Total fee for sold items: " << total_fee << endl;
+        cout << "Items sold: " << items_sold << endl;
+        cout << "Items not meeting reserve price: " << items_not_meeting_reserve << endl;
+        cout << "Items with no bids: " << items_with_no_bids << endl;
+    }
+};
+
+int main() {
+    Auction auction;
+
+    // Task 1: Auction set up
+    auction.add_item(1, "Painting", 100);
+    auction.add_item(2, "Antique Vase", 200);
+    auction.add_item(3, "Vintage Watch", 150);
+    auction.add_item(4, "Collectible Coins", 300);
+    auction.add_item(5, "Rare Books", 120);
+    auction.add_item(6, "Sculpture", 250);
+    auction.add_item(7, "Jewelry Set", 400);
+    auction.add_item(8, "Furniture Set", 350);
+    auction.add_item(9, "Classic Car", 500);
+    auction.add_item(10, "Musical Instrument", 180);
+
+    // Task 2: Buyer bids
+    auction.record_bid(1, 1, 120);
+    auction.record_bid(2, 1, 150);
+    auction.record_bid(3, 1, 420); // Buyer 3 outbids Buyer 1
+    auction.record_bid(2, 1, 430); // Buyer 2 outbids Buyer 3
+
+    auction.record_bid(1, 2, 250);
+    auction.record_bid(2, 2, 210);
+
+    auction.record_bid(1, 3, 160);
+    auction.record_bid(2, 3, 170);
+    auction.record_bid(3, 3, 180);
+
+    auction.record_bid(1, 4, 310);
+    auction.record_bid(2, 4, 320);
+    auction.record_bid(3, 4, 330);
+
+    auction.record_bid(1, 5, 130);
+
+    auction.record_bid(1, 6, 260);
+    auction.record_bid(2, 6, 270);
+    auction.record_bid(3, 6, 280);
+
+    auction.record_bid(1, 7, 420);
+    auction.record_bid(2, 7, 430);
+    auction.record_bid(3, 7, 440);
+
+    // Task 3: At the end of the auction
+    auction.end_auction();
+
+    return 0;
+}
